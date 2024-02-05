@@ -1,0 +1,20 @@
+services:
+  api:
+    build:
+      dockerfile: docker/Dockerfile
+      context: ..
+    ports:
+      - 3000:3000
+      - 9229:9229
+    environment:
+      - MONGO_DB_NAME=cupcake
+      - DATABASE_CONNECTIONSTRING=mongodb://mongo:27017/
+    volumes:
+      - ../:/app
+    command: "npm run dev"
+
+  mongo:
+    image: mongo:5.0
+    restart: unless-stopped
+    ports:
+      - 27017:27017
