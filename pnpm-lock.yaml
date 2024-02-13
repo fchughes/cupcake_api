@@ -19,6 +19,9 @@ dependencies:
   fastify-plugin:
     specifier: ^4.0.0
     version: 4.0.0
+  lens.ts:
+    specifier: ^0.5.1
+    version: 0.5.1
   mongodb:
     specifier: ^6.3.0
     version: 6.3.0
@@ -793,6 +796,10 @@ packages:
 
   /json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
+    dev: false
+
+  /lens.ts@0.5.1:
+    resolution: {integrity: sha512-cxzQxbitr78SnkulxKsdPC6v/+1CHmB4j2sMt2KXcbiCXLHphYZtOWYNIB1PumO5hCHescODqwhURB/OH/j5VA==}
     dev: false
 
   /light-my-request@5.11.0:

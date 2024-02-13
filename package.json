@@ -7,7 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "openapi": "openapi typegen ./cupcake_storev1_openapi3.0.yml > src/types/openapi.d.ts",
+    "convert": "npx -p swagger2openapi swagger2openapi --yaml --outfile ./openapi/v3/cupcacke_storev1.yaml ./openapi/v2/cupcacke_storev1.yaml",
+    "openapi": "openapi typegen ./openapi/v3/cupcake_storev1.yml > src/types/cupcake_storev1.d.ts",
     "test": "npm run build:ts && tsc -p test/tsconfig.json && node --test -r ts-node/register test/**/*.ts",
     "start": "npm run build:ts && fastify start -l info dist/app.js",
     "build:ts": "tsc",
@@ -33,6 +34,7 @@
     "fastify": "^4.0.0",
     "fastify-cli": "^6.1.0",
     "fastify-plugin": "^4.0.0",
+    "lens.ts": "^0.5.1",
     "mongodb": "^6.3.0",
     "openapi-backend": "^5.10.6"
   },

@@ -1,8 +1,11 @@
 import type { Context } from "openapi-backend";
-import type { FastifyPluginAsync, FastifyReply, FastifyRequest } from "fastify";
-import { api, mongo_client } from "../app";
-import { Paths } from "../types/openapi";
-import type { FastReq } from "../app";
+import type { FastifyPluginAsync, FastifyRequest } from "fastify";
+import mongo_client from "../mongo";
+import { Paths } from "../types/cupcake_storev1";
+import { apiV2 } from "../openapi";
+import { Handler } from "openapi-backend";
+
+const schema_version = 1;
 
 const cupcake_col = mongo_client
   .db(process.env.MONGO_DB_NAME)
@@ -11,7 +14,7 @@ const counter_col = mongo_client
   .db(process.env.MONGO_DB_NAME)
   .collection("counter");
 
-const retErr = (f: Function) => {
+const retErr = (f: () => any | Error) => {
   try {
     return f();
   } catch (err) {
@@ -19,50 +22,49 @@ const retErr = (f: Function) => {
   }
 };
 
-api.register({
-  listCupcakes: async (c: Context, request: FastReq, reply: FastifyReply) =>
-    retErr(async () => cupcake_col.find().toArray()),
-  getCupcakeById: async (
-    c: Context<{ cupcakeId: string }>,
-    request: FastifyRequest<{
-      Querystring: Paths.GetCupcakeById.PathParameters;
-    }>,
-    reply: FastifyReply
-  ) =>
-    retErr(async () =>
-      cupcake_col.findOne({
-        id: parseInt(c.request.params.cupcakeId as string),
-      })
-    ),
-  addCupcake: async (
-    c: Context,
-    request: FastifyRequest<{ Body: Paths.AddCupcake.RequestBody }>,
-    reply: FastifyReply,
-    fastify
-  ) => {
-    try {
-      var counter = await counter_col.findOneAndUpdate(
-        {},
-        { $inc: { counter: 1 } },
-        { returnDocument: "after", upsert: true }
-      );
-    } catch (err) {
-      return err;
-    }
-    try {
-      const cupcake = await cupcake_col.insertOne({
-        id: counter?.counter,
-        ...request.body,
-      });
-      return cupcake;
-    } catch (err) {
-      return err;
-    }
-  },
+const listCupcakes: Handler = async (c: Context) =>
+  cupcake_col.find().toArray();
+
+const getCupcakeById: Handler = async (c: Context<{ cupcakeId: string }>) => {
+  retErr(async () =>
+    cupcake_col.findOne({
+      id: parseInt(c.request.params.cupcakeId as string),
+    })
+  );
+};
+
+const addCupcake: Handler = async (
+  c: Context,
+  request: FastifyRequest<{ Body: Paths.AddCupcake.RequestBody }>
+) => {
+  try {
+    var counter = await counter_col.findOneAndUpdate(
+      {},
+      { $inc: { counter: 1 } },
+      { returnDocument: "after", upsert: true }
+    );
+  } catch (err) {
+    return err;
+  }
+  try {
+    const cupcake = await cupcake_col.insertOne({
+      id: counter?.counter,
+      _ver: schema_version,
+      ...request.body,
+    });
+    return cupcake;
+  } catch (err) {
+    return err;
+  }
+};
+
+apiV2.register({
+  listCupcakes: listCupcakes, //async () => retErr(async () => cupcake_col.find().toArray()),
+  getCupcakeById: getCupcakeById,
+  addCupcake: addCupcake,
   updateCupcake: async (
     c: Context<{ cupcakeId: string }>,
-    request: FastifyRequest<{ Body: Paths.UpdateCupcake.RequestBody }>,
-    reply: FastifyReply
+    request: FastifyRequest<{ Body: Paths.UpdateCupcake.RequestBody }>
   ) =>
     await retErr(async () =>
       cupcake_col.findOneAndUpdate(
@@ -72,11 +74,7 @@ api.register({
         request.body
       )
     ),
-  deleteCupcake: async (
-    c: Context<{ cupcakeId: string }>,
-    request: FastifyRequest,
-    reply: FastifyReply
-  ) =>
+  deleteCupcake: async (c: Context<{ cupcakeId: string }>) =>
     await retErr(async () =>
       cupcake_col.findOneAndDelete({
         id: parseInt(c.request.params.cupcakeId as string),
