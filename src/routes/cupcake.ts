@@ -58,28 +58,32 @@ const addCupcake: Handler = async (
   }
 };
 
+const updateCupcake = async (
+  c: Context<{ cupcakeId: string }>,
+  request: FastifyRequest<{ Body: Paths.UpdateCupcake.RequestBody }>
+) =>
+  await retErr(async () =>
+    cupcake_col.findOneAndUpdate(
+      {
+        id: parseInt(c.request.params.cupcakeId as string),
+      },
+      request.body
+    )
+  );
+
+const deleteCupcake = async (c: Context<{ cupcakeId: string }>) =>
+  await retErr(async () =>
+    cupcake_col.findOneAndDelete({
+      id: parseInt(c.request.params.cupcakeId as string),
+    })
+  );
+
 apiV2.register({
   listCupcakes: listCupcakes, //async () => retErr(async () => cupcake_col.find().toArray()),
   getCupcakeById: getCupcakeById,
   addCupcake: addCupcake,
-  updateCupcake: async (
-    c: Context<{ cupcakeId: string }>,
-    request: FastifyRequest<{ Body: Paths.UpdateCupcake.RequestBody }>
-  ) =>
-    await retErr(async () =>
-      cupcake_col.findOneAndUpdate(
-        {
-          id: parseInt(c.request.params.cupcakeId as string),
-        },
-        request.body
-      )
-    ),
-  deleteCupcake: async (c: Context<{ cupcakeId: string }>) =>
-    await retErr(async () =>
-      cupcake_col.findOneAndDelete({
-        id: parseInt(c.request.params.cupcakeId as string),
-      })
-    ),
+  updateCupcake: updateCupcake,
+  deleteCupcake: deleteCupcake,
 });
 
 // use as fastify middleware
